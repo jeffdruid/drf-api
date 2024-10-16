@@ -68,10 +68,6 @@ DEBUG = "DEV" in os.environ
 ALLOWED_HOSTS = [
     os.environ.get("ALLOWED_HOST"),
     "localhost",
-    "drf-api-jeff-00b8a22f06d7.herokuapp.com",
-    "pp5-jeff-d4728660c25d.herokuapp.com/",
-    "127.0.0.1",
-    "http://localhost:3000",
 ]
 
 
@@ -116,17 +112,14 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
 ]
-
-if "CLIENT_ORIGIN" in os.environ:
-    CORS_ALLOWED_ORIGINS = [
+CORS_ALLOWED_ORIGINS = [
+    origin
+    for origin in [
         os.environ.get("CLIENT_ORIGIN"),
-        "http://localhost:3000",
+        os.environ.get("CLIENT_ORIGIN_DEV"),
     ]
-else:
-    CORS_ALLOWED_ORIGIN_REGEXES = [
-        r"^https://.*\.gitpod\.io$",
-        "http://localhost:3000",
-    ]
+    if origin
+]
 
 CORS_ALLOW_CREDENTIALS = True
 
