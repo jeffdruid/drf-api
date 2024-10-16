@@ -69,6 +69,7 @@ ALLOWED_HOSTS = [
     os.environ.get("ALLOWED_HOST"),
     "localhost",
     "drf-api-jeff-00b8a22f06d7.herokuapp.com",
+    "pp5-jeff-d4728660c25d.herokuapp.com/",
     "127.0.0.1",
 ]
 
