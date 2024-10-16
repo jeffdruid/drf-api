@@ -71,6 +71,7 @@ ALLOWED_HOSTS = [
     "drf-api-jeff-00b8a22f06d7.herokuapp.com",
     "pp5-jeff-d4728660c25d.herokuapp.com/",
     "127.0.0.1",
+    "http://localhost:3000",
 ]
 
 
