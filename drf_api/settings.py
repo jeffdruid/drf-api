@@ -40,12 +40,14 @@ if "DEV" not in os.environ:
     REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = [
         "rest_framework.renderers.JSONRenderer",
     ]
-
 REST_USE_JWT = True
-JWT_AUTH_SECURE = True
-JWT_AUTH_COOKIE = "my-app-auth"
-JWT_AUTH_REFRESH_COOKIE = "my-refresh-token"
-JWT_AUTH_SAMESITE = "None"
+
+DEBUG = "DEV" in os.environ  # Define DEBUG here before referencing it later
+
+JWT_AUTH_COOKIE = "my-app-auth"  # Access token cookie
+JWT_AUTH_REFRESH_COOKIE = "my-refresh-token"  # Refresh token cookie
+JWT_AUTH_SECURE = not DEBUG  # Secure cookies in production
+JWT_AUTH_SAMESITE = "None"  # Ensure SameSite is 'None' for cross-site requests
 
 REST_AUTH_SERIALIZERS = {
     "USER_DETAILS_SERIALIZER": "drf_api.serializers.CurrentUserSerializer"
@@ -61,23 +63,21 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 DEBUG = "DEV" in os.environ
 
 ALLOWED_HOSTS = [
-    os.environ.get("ALLOWED_HOST"),
-    "localhost",
+    os.environ.get("ALLOWED_HOST"),  # Heroku production host
+    "localhost",  # Development host
+    "127.0.0.1",  # Development (loopback address)
 ]
 
+
 if "CLIENT_ORIGIN" in os.environ:
-    CORS_ALLOWED_ORIGINS = [os.environ.get("CLIENT_ORIGIN")]
+    CORS_ALLOWED_ORIGINS = [
+        os.environ.get("CLIENT_ORIGIN"),
+        os.environ.get("CLIENT_ORIGIN_DEV"),  # Allow dev origin (localhost)
+    ]
 else:
     CORS_ALLOWED_ORIGINS = [
         "http://localhost:3000",
     ]
-# if "CLIENT_ORIGIN_DEV" in os.environ:
-#     extracted_url = re.match(
-#         r"^.+-", os.environ.get("CLIENT_ORIGIN_DEV", ""), re.IGNORECASE
-#     ).group(0)
-#     CORS_ALLOWED_ORIGIN_REGEXES = [
-#         rf"{extracted_url}(eu|us)\d+\w\.gitpod\.io$",
-#     ]
 
 CORS_ALLOW_CREDENTIALS = True
 
