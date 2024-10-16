@@ -81,6 +81,10 @@ else:
     ]
 
 CORS_ALLOW_CREDENTIALS = True
+CSRF_COOKIE_HTTPONLY = True
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",  # Frontend URL
+]
 
 # Application definition
 
