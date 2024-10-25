@@ -2,10 +2,36 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .models import FlaggedContent
 from .serializers import FlaggedContentSerializer
+from rest_framework.decorators import action
 
 class FlaggedContentViewSet(viewsets.ModelViewSet):
     queryset = FlaggedContent.objects.all()
     serializer_class = FlaggedContentSerializer
+    
+     # Custom action for checking content without saving flagged content
+    @action(detail=False, methods=['post'], url_path='check')
+    def check_content(self, request):
+        content = request.data.get('content', '')
+        
+        # Simple trigger word example
+        trigger_words = [
+            # Suicide-related
+            "suicide", "suicidal", "kill myself", "kms", "k/ys", "kys", "end my life", "take my life", 
+            "hang myself", "overdose", "OD", "CO", "SW", "RIP", "x_x", "88", "CTB", "catch the bus", 
+            "deep sleep", "permanent solution", "exit plan", "final exit", "punch out", "long nap", 
+            "peaceful pill", "golden gate", "rope", "helium hood", "blackout method",
+            
+            # Self-harm-related
+            "self-harm", "SI", "SH", "C/S", "cut myself", "cutting", "slit wrists", "hurt myself", 
+            "burn myself", "scar myself", "self-injury", "bleed out", "razor", "slicing", "red bracelet", 
+            "scratching", "carving", "blade", "hurting", "hurting oneself", "pinky promise",
+        ]
+        flagged = any(word in content.lower() for word in trigger_words)
+        
+        if flagged:
+            return Response({"flagged": True, "message": "Content contains trigger words."})
+        
+        return Response({"flagged": False}, status=status.HTTP_200_OK)
 
     def create(self, request, *args, **kwargs):
         try:
