@@ -1,40 +1,31 @@
+from rest_framework import viewsets, status
 from rest_framework.response import Response
-from rest_framework import status, viewsets
 from .models import FlaggedContent
 from .serializers import FlaggedContentSerializer
-
-# Trigger words list including slang, code words, and abbreviations
-TRIGGER_WORDS = [
-    # Suicide-related
-    "suicide", "suicidal", "kill myself", "kms", "k/ys", "kys", "end my life", "take my life", 
-    "hang myself", "overdose", "OD", "CO", "SW", "RIP", "x_x", "88", "CTB", "catch the bus", 
-    "deep sleep", "permanent solution", "exit plan", "final exit", "punch out", "long nap", 
-    "peaceful pill", "golden gate", "rope", "helium hood", "blackout method",
-    
-    # Self-harm-related
-    "self-harm", "SI", "SH", "C/S", "cut myself", "cutting", "slit wrists", "hurt myself", 
-    "burn myself", "scar myself", "self-injury", "bleed out", "razor", "slicing", "red bracelet", 
-    "scratching", "carving", "blade", "hurting", "hurting oneself", "pinky promise",
-
-    # Depression and Distress-related
-    "depression", "empty", "hollow", "hopeless", "worthless", "FML", "TFW", "black dog", "numb", 
-    "dead inside", "I'm done", "can't deal", "at the end", "low", "trapped", "nobody cares", 
-    "suffocate", "over it", "drowning", "zoned out", "EOD", "no way out", "mentally gone", 
-    "DGAF", "SAD"
-]
-
-def check_trigger_words(content):
-    for word in TRIGGER_WORDS:
-        if word in content.lower():
-            return True
-    return False
 
 class FlaggedContentViewSet(viewsets.ModelViewSet):
     queryset = FlaggedContent.objects.all()
     serializer_class = FlaggedContentSerializer
 
     def create(self, request, *args, **kwargs):
-        content = request.data.get('content', '')
-        if check_trigger_words(content):
-            return Response({"flagged": True, "message": "Content contains trigger words"}, status=status.HTTP_200_OK)
-        return Response({"flagged": False, "message": "Content is safe"}, status=status.HTTP_200_OK)
+        try:
+            # Log the incoming request data
+            print(request.data)
+
+            # Validate required fields
+            required_fields = ['post_id', 'content', 'reason', 'user']
+            for field in required_fields:
+                if field not in request.data:
+                    raise ValueError(f"'{field}' is a required field.")
+
+            flagged_content = FlaggedContent.objects.create(
+                post_id=request.data.get('post_id'),
+                content=request.data['content'],
+                reason=request.data['reason'],
+                user=request.data['user'],  # Ensure this matches the 'user' field
+            )
+            return Response({"success": True}, status=status.HTTP_201_CREATED)
+        
+        except Exception as e:
+            print(e)  # Check the exact error in the console
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
