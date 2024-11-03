@@ -1,31 +1,22 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from .models import FlaggedContent
-from .serializers import FlaggedContentSerializer
+from .models import FlaggedContent, TriggerWord
+from .serializers import FlaggedContentSerializer, TriggerWordSerializer
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+
 
 class FlaggedContentViewSet(viewsets.ModelViewSet):
     queryset = FlaggedContent.objects.all()
     serializer_class = FlaggedContentSerializer
     
-     # Custom action for checking content without saving flagged content
+    # Custom action for checking content without saving flagged content
     @action(detail=False, methods=['post'], url_path='check')
     def check_content(self, request):
         content = request.data.get('content', '')
         
-        # Simple trigger word example
-        trigger_words = [
-            # Suicide-related
-            "suicide", "suicidal", "kill myself", "kms", "k/ys", "kys", "end my life", "take my life", 
-            "hang myself", "overdose", "OD", "CO", "SW", "RIP", "x_x", "88", "CTB", "catch the bus", 
-            "deep sleep", "permanent solution", "exit plan", "final exit", "punch out", "long nap", 
-            "peaceful pill", "golden gate", "rope", "helium hood", "blackout method",
-            
-            # Self-harm-related
-            "self-harm", "SI", "SH", "C/S", "cut myself", "cutting", "slit wrists", "hurt myself", 
-            "burn myself", "scar myself", "self-injury", "bleed out", "razor", "slicing", "red bracelet", 
-            "scratching", "carving", "blade", "hurting", "hurting oneself", "pinky promise",
-        ]
+        # Fetch all trigger words from the database
+        trigger_words = TriggerWord.objects.values_list('word', flat=True)
         flagged = any(word in content.lower() for word in trigger_words)
         
         if flagged:
@@ -55,3 +46,19 @@ class FlaggedContentViewSet(viewsets.ModelViewSet):
         except Exception as e:
             print(e)  # Check the exact error in the console
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class TriggerWordViewSet(viewsets.ModelViewSet):
+    queryset = TriggerWord.objects.all()
+    serializer_class = TriggerWordSerializer
+    permission_classes = [IsAuthenticated]  # Ensures only authenticated users can access
+
+    @action(detail=False, methods=['post'], url_path='check')
+    def check_content(self, request):
+        content = request.data.get('content', '')
+        trigger_words = TriggerWord.objects.values_list('word', flat=True)
+        flagged = any(word in content.lower() for word in trigger_words)
+        
+        if flagged:
+            return Response({"flagged": True, "message": "Content contains trigger words."})
+        
+        return Response({"flagged": False}, status=status.HTTP_200_OK)

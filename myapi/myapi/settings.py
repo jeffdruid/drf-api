@@ -67,6 +67,8 @@ SIMPLE_JWT = {
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'moderation.authentication.FirebaseAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication', 
 
     ],
     'DEFAULT_PERMISSION_CLASSES': [

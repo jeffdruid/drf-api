@@ -1,7 +1,7 @@
 import firebase_admin
 from firebase_admin import firestore
 from django.contrib import admin
-from .models import FlaggedContent
+from .models import FlaggedContent, TriggerWord
 from django.contrib import messages
 
 # Initialize Firebase if it’s not already initialized
@@ -43,3 +43,4 @@ class FlaggedContentAdmin(admin.ModelAdmin):
         return False
 
 admin.site.register(FlaggedContent, FlaggedContentAdmin)
+admin.site.register(TriggerWord)
