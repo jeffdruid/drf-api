@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('moderation', '0003_alter_flaggedcontent_post_id_and_more'),
+        ("moderation", "0003_alter_flaggedcontent_post_id_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='flaggedcontent',
-            name='is_visible',
+            model_name="flaggedcontent",
+            name="is_visible",
             field=models.BooleanField(default=False),
         ),
     ]

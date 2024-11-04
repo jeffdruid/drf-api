@@ -15,14 +15,28 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='FlaggedContent',
+            name="FlaggedContent",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('post_id', models.CharField(max_length=100)),
-                ('reason', models.CharField(max_length=255)),
-                ('flagged_at', models.DateTimeField(auto_now_add=True)),
-                ('reviewed', models.BooleanField(default=False)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("post_id", models.CharField(max_length=100)),
+                ("reason", models.CharField(max_length=255)),
+                ("flagged_at", models.DateTimeField(auto_now_add=True)),
+                ("reviewed", models.BooleanField(default=False)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
     ]

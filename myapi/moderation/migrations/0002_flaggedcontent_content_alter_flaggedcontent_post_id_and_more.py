@@ -6,24 +6,24 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('moderation', '0001_initial'),
+        ("moderation", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='flaggedcontent',
-            name='content',
-            field=models.TextField(default='No content available'),
+            model_name="flaggedcontent",
+            name="content",
+            field=models.TextField(default="No content available"),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='flaggedcontent',
-            name='post_id',
+            model_name="flaggedcontent",
+            name="post_id",
             field=models.CharField(max_length=255),
         ),
         migrations.AlterField(
-            model_name='flaggedcontent',
-            name='reason',
+            model_name="flaggedcontent",
+            name="reason",
             field=models.TextField(),
         ),
     ]

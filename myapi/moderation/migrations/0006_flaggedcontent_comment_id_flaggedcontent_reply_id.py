@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('moderation', '0005_triggerword'),
+        ("moderation", "0005_triggerword"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='flaggedcontent',
-            name='comment_id',
+            model_name="flaggedcontent",
+            name="comment_id",
             field=models.CharField(blank=True, max_length=100, null=True),
         ),
         migrations.AddField(
-            model_name='flaggedcontent',
-            name='reply_id',
+            model_name="flaggedcontent",
+            name="reply_id",
             field=models.CharField(blank=True, max_length=100, null=True),
         ),
     ]
