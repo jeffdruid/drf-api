@@ -398,6 +398,11 @@ The Code Institute's linter was used to ensure adherence to best practices and m
 | Tests.py        | ![tests](/README/images/linter-tests.png)           |
 | Views.py        | ![views](/README/images/linter-views.png)           |
 
+### Black Code Formatter
+- Black was used for code formatting to ensure consistent style and readability across the codebase.
+
+![Black Formatter](/README/images/black-formatter.png)
+
 ## Deployment
 
 This section provides detailed instructions for deploying the backend of the project. You can either set up the backend locally or deploy it to Heroku for remote hosting.
