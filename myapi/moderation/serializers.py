@@ -4,8 +4,7 @@ from .models import FlaggedContent, TriggerWord
 class FlaggedContentSerializer(serializers.ModelSerializer):
     class Meta:
         model = FlaggedContent
-        fields = ['id','user', 'post_id', 'reason', 'flagged_at', 'reviewed', 'content', 'is_visible']
-
+        fields = ['id', 'user', 'post_id', 'comment_id', 'reply_id', 'reason', 'flagged_at', 'reviewed', 'content', 'is_visible']
 class TriggerWordSerializer(serializers.ModelSerializer):
     class Meta:
         model = TriggerWord
