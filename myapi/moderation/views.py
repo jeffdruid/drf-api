@@ -3,8 +3,13 @@ from rest_framework.response import Response
 from .models import FlaggedContent, TriggerWord
 from .serializers import FlaggedContentSerializer, TriggerWordSerializer
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
+import firebase_admin
+from firebase_admin import firestore
 
+# Initialize Firestore (make sure to configure Firebase Admin SDK)
+if not firebase_admin._apps:
+    firebase_admin.initialize_app()
 
 class FlaggedContentViewSet(viewsets.ModelViewSet):
     queryset = FlaggedContent.objects.all()
@@ -46,6 +51,31 @@ class FlaggedContentViewSet(viewsets.ModelViewSet):
         except Exception as e:
             print(e)  # Check the exact error in the console
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = {
+            "reviewed": request.data.get("reviewed", instance.reviewed),
+            "is_visible": request.data.get("is_visible", instance.is_visible),
+        }
+        serializer = self.get_serializer(instance, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        # Firestore update logic
+        try:
+            db = firestore.client()
+            doc_ref = db.collection('Posts').document(instance.post_id)
+            doc_ref.update({
+                'is_visible': data['is_visible'],
+                'reviewed': data['reviewed']
+            })
+            print("Firestore document updated successfully.")
+        except Exception as e:
+            print(f"Error updating Firestore: {e}")
+            return Response({"error": f"Firestore update failed: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class TriggerWordViewSet(viewsets.ModelViewSet):
     queryset = TriggerWord.objects.all()
