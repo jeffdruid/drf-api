@@ -21,9 +21,9 @@ For detailed information about the frontend of this project, please refer to the
 1. [Models](#models)
 1. [Serializers](#serializers)
 1. [Views](#views)
-1. [Trigger Words Detection](#trigger-words-example)
-1. [Tests](#tests)
+1. [Backend Testing](#backend-testing)
 1. [Deployment](#deployment)
+1. [Credits](#credits)
 
 ## Key Features
 
@@ -51,7 +51,7 @@ For detailed information about the frontend of this project, please refer to the
 
 ## Models
 
-FlaggedContent Model
+### FlaggedContent Model
 The FlaggedContent model stores information about content flagged for potential issues, such as trigger words related to self-harm or harmful behaviors.
 
 ```python
@@ -80,6 +80,29 @@ class FlaggedContent(models.Model):
   reviewed: A BooleanField indicating if the flagged content has been reviewed by an admin.
 - is_visible: A BooleanField to control the visibility of flagged content on the platform (default is False).
 
+### Trigger Words Model
+The TriggerWords model stores a list of words that are considered sensitive or concerning. This list is used to check content for potential issues.
+
+```python
+# TriggerWord model
+class TriggerWord(models.Model):
+    # Model to store trigger words that will be flagged in content.
+    word = models.CharField(max_length=100, unique=True)  # Trigger word
+    category = models.CharField(max_length=100)  # Category (e.g., "self-harm")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.word} ({self.category})"
+```
+
+### Fields:
+- word: A CharField storing the trigger word.
+- category: A CharField to categorize the trigger word (e.g., "self-harm").
+- created_at: A DateTimeField set to the time the trigger word was added.
+- updated_at: A DateTimeField that updates when the trigger word is modified.
+
+
 ## Serializers
 
 FlaggedContentSerializer
@@ -103,22 +126,35 @@ class FlaggedContentSerializer(serializers.ModelSerializer):
 
 This serializer enables efficient data transfer between the Django backend and frontend or external applications.
 
+The TriggerWordSerializer is responsible for converting TriggerWord model instances to JSON and vice versa. It exposes the following fields:
+```python
+class TriggerWordSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TriggerWord
+        fields = ["id", "word", "category", "created_at", "updated_at"]
+```
+
+- id: Unique identifier for the trigger word.
+- word: The trigger word itself.
+- category: The category of the trigger word (e.g., "self-harm").
+- created_at: Timestamp of when the trigger word was added.
+- updated_at: Timestamp of the last update to the trigger word.
+
+This serializer facilitates the interaction between the backend and frontend for managing trigger words.
+
 ### Views
 
 #### FlaggedContentViewSet
 
 The FlaggedContentViewSet is a DRF viewset that manages CRUD operations for flagged content, allowing for creation, retrieval, updating, and deletion.
 
-#### Main Endpoints:
+##### Main Endpoints:
 
 - create: Handles creation of flagged content. Before saving, it validates the presence of all required fields (post_id, content, reason, and user).
 
 ```python
 def create(self, request, *args, **kwargs):
         try:
-            # Log the incoming request data
-            print(request.data)
-
             # Validate required fields
             required_fields = ['post_id', 'content', 'reason', 'user']
             for field in required_fields:
@@ -134,34 +170,59 @@ def create(self, request, *args, **kwargs):
             return Response({"success": True}, status=status.HTTP_201_CREATED)
 ```
 
-- check_content: A custom action that checks if content contains trigger words without saving it to the database. This helps in real-time moderation of content as users post.
+- Update: Allows admins to update the reviewed and visibility status of flagged content.
 
 ```python
- # Custom action for checking content without saving flagged content
-    @action(detail=False, methods=['post'], url_path='check')
-    def check_content(self, request):
-        content = request.data.get('content', '')
+ def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = {
+            "reviewed": request.data.get("reviewed", instance.reviewed),
+            "is_visible": request.data.get("is_visible", instance.is_visible),
+        }
+        serializer = self.get_serializer(instance, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
 
-        # Simple trigger word example
-        trigger_words = [
-            ...  # Trigger words here
-        ]
+        ...
+
+            # Update Firestore document visibility and review status
+            doc_ref.update(
+                {
+                    "is_visible": data["is_visible"],
+                    "reviewed": data["reviewed"],
+                }
+            )
+            print(
+                f"Firestore document updated successfully at path: "
+                f"{doc_ref.path}"
+            )
+```
+
+##### Trigger Words ViewSet
+The TriggerWordViewSet manages CRUD operations for trigger words, allowing admins to add, edit, or delete trigger words for content moderation.
+
+```python
+class TriggerWordViewSet(viewsets.ModelViewSet):
+    queryset = TriggerWord.objects.all()
+    serializer_class = TriggerWordSerializer
+    permission_classes = [
+        IsAuthenticated
+    ]  # Ensures only authenticated users can access
+
+    @action(detail=False, methods=["post"], url_path="check")
+    def check_content(self, request):
+        content = request.data.get("content", "")
+        trigger_words = TriggerWord.objects.values_list("word", flat=True)
         flagged = any(word in content.lower() for word in trigger_words)
 
         if flagged:
-            return Response({"flagged": True, "message": "Content contains trigger words."})
+            return Response(
+                {"flagged": True, "message": "Content contains trigger words."}
+            )
 
         return Response({"flagged": False}, status=status.HTTP_200_OK)
 ```
-
-#### Custom Action (check_content):
-
-This action uses a list of trigger words to check if the submitted content includes any concerning terms related to self-harm or other harmful behaviors.
-If any trigger word is detected, the content is flagged, and a response indicating the presence of trigger words is returned.
-
-##### Trigger Words Example:
-
-The list includes terms like "suicide," "self-harm," "cutting," and similar terms that may indicate self-harm or suicidal ideation.
+- check_content: A custom action that checks if content contains trigger words without saving it to the database. This helps in real-time moderation of content as users post.
 
 ##### Example Response from check_content:
 
@@ -192,6 +253,9 @@ In case of missing fields or other issues during creation, the method logs the e
 The admin interface allows administrators to review, approve, or delete flagged posts. Flagged content is displayed with the reason for flagging, the user who posted it, and the flagged date.
 ![Flagged Post](/README/images/flagged-post.png)
 
+- Admins can add, edit, or remove trigger words to customize the moderation process.
+![Trigger Words](/README/images/triggerwords.png)
+This feature is also available on the frontend, allowing admins to approve or delete flagged content.
 #### Admin Actions
 
 - Approve: Admins can mark content as reviewed and make it visible if deemed safe.
@@ -318,6 +382,21 @@ def test_get_flagged_content_list(self):
 - Purpose: Ensures that the flagged content list endpoint returns the correct data.
 - How It Works: Creates a flagged content entry in the database and then sends a GET request to retrieve the list of flagged content.
 - Expected Result: The response should include the content that was created, confirming that flagged content can be retrieved correctly.
+
+### Python Linter
+
+The backend codebase uses flake8 as a linter to maintain code quality and consistency. The linter checks for PEP 8 compliance and other code style issues.
+
+The Code Institute's linter was used to ensure adherence to best practices and maintain a clean codebase.
+
+
+| Screenshot Description | Filename                          |
+|------------------------|-----------------------------------|
+| Admin.py        | ![admin](/README/images/linter-admin.png)           |
+| Models.py        | ![models](/README/images/linter-models.png)           |
+| Serializers.py        | ![serializers](/README/images/linter-serial.png)           |
+| Tests.py        | ![tests](/README/images/linter-tests.png)           |
+| Views.py        | ![views](/README/images/linter-views.png)           |
 
 ## Deployment
 
@@ -481,10 +560,19 @@ Open your browser and navigate to the URL provided by Heroku (https://<app_name>
 - **[Django REST Framework](https://www.django-rest-framework.org/)**: DRF’s documentation provided crucial guidance on designing APIs, handling authentication, and structuring views.
 - **[Firebase Documentation](https://firebase.google.com/docs)**: Firebase’s extensive documentation helped with integration for authentication, Firestore database operations, and cloud storage.
 - **[React](https://reactjs.org/docs/getting-started.html)** and **[React-Bootstrap](https://react-bootstrap.github.io/)**: These libraries were instrumental in building the frontend components and provided helpful guides for using UI components with React.
+- **[Heroku](https://devcenter.heroku.com/)**: Heroku’s documentation guided the deployment process, including setting up PostgreSQL databases, environment variables, and deploying Django applications.
+- **[PostgreSQL](https://www.postgresql.org/docs/)**: PostgreSQL’s documentation was useful for understanding database management, migrations, and querying.
+- **[Python](https://docs.python.org/3/)**: Python’s official documentation was a valuable resource for understanding language features, standard libraries, and best practices.
+- **[W3Schools](https://www.w3schools.com/)**: W3Schools provided helpful tutorials and references for HTML, CSS, and JavaScript, which were useful for frontend development.
+- **[YouTube Tutorials](https://www.youtube.com/)**: Various YouTube tutorials on Django, DRF, Firebase, and React provided additional insights and practical examples for building web applications.
+- **[MDN Web Docs](https://developer.mozilla.org/)**: MDN Web Docs were a valuable resource for understanding web technologies, APIs, and best practices for frontend development.
+- **[CI Python Linter](https://pep8ci.herokuapp.com/)**: The Code Institute’s Python linter was used to ensure PEP 8 compliance and maintain code quality.
 
 ### Libraries and Dependencies
 
 - **[Axios](https://axios-http.com/)**: Used for making HTTP requests from the frontend to the backend API.
+- **[Flake8](https://flake8.pycqa.org/en/latest/)**: Flake8 was used as a linter to maintain code quality and adhere to PEP 8 standards.
+- **[Black](https://black.readthedocs.io/en/stable/)**: Black was used for code formatting to ensure consistent style and readability.
 
 ### Similar Projects and Open Source Contributions
 

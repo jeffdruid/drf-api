@@ -18,8 +18,6 @@ class FlaggedContentViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         try:
-            # Log incoming request data
-            print("Received flagged content:", request.data)
 
             # Get parent type and set required fields
             parent_type = request.data.get("parent_type", "post")
@@ -54,7 +52,6 @@ class FlaggedContentViewSet(viewsets.ModelViewSet):
             return Response({"success": True}, status=status.HTTP_201_CREATED)
 
         except Exception as e:
-            print("Error in create:", e)
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
@@ -103,13 +100,8 @@ class FlaggedContentViewSet(viewsets.ModelViewSet):
                     "reviewed": data["reviewed"],
                 }
             )
-            print(
-                f"Firestore document updated successfully at path: "
-                f"{doc_ref.path}"
-            )
 
         except Exception as e:
-            print(f"Error updating Firestore for ID {instance.id}: {e}")
             return Response(
                 {"error": f"Firestore update failed: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
