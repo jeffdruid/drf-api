@@ -12,10 +12,11 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import os
+import json
 from datetime import timedelta
 from dotenv import load_dotenv
 import firebase_admin
-from firebase_admin import credentials
+from firebase_admin import credentials, initialize_app
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -23,12 +24,27 @@ load_dotenv()
 if os.path.exists("env.py"):
     import env
 
-# Initialize Firebase Admin SDK
-cred = credentials.Certificate(os.environ.get("FIREBASE_ADMIN_SDK"))
-firebase_admin.initialize_app(cred)
+
+# Load Firebase credentials from environment variable
+firebase_credentials = os.environ.get("FIREBASE_ADMIN_SDK")
+if firebase_credentials:
+    try:
+        # Parse the JSON string into a dictionary
+        cred_dict = json.loads(firebase_credentials)
+        # Initialize the credentials using the dictionary
+        cred = credentials.Certificate(cred_dict)
+        initialize_app(cred)
+    except json.JSONDecodeError as e:
+        print("Invalid JSON in FIREBASE_ADMIN_SDK:", e)
+    except Exception as e:
+        print("Error initializing Firebase Admin SDK:", e)
+else:
+    print("FIREBASE_ADMIN_SDK environment variable not found.")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
 
 
 # Quick-start development settings - unsuitable for production
@@ -40,7 +56,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", os.environ.get("ALLOWED_HOST")]
 
 
 # Application definition
