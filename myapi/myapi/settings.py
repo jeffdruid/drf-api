@@ -24,22 +24,18 @@ load_dotenv()
 if os.path.exists("env.py"):
     import env
 
-
-# Load Firebase credentials from environment variable
-firebase_credentials = os.environ.get("FIREBASE_ADMIN_SDK")
-if firebase_credentials:
+# Firebase JSON credentials from environment variable
+firebase_credentials_json = os.environ.get("FIREBASE_ADMIN_SDK")
+if firebase_credentials_json:
     try:
-        # Parse the JSON string into a dictionary
-        cred_dict = json.loads(firebase_credentials)
-        # Initialize the credentials using the dictionary
-        cred = credentials.Certificate(cred_dict)
+        # Load JSON string from environment variable
+        firebase_credentials_data = json.loads(firebase_credentials_json)
+        cred = credentials.Certificate(firebase_credentials_data)
         initialize_app(cred)
-    except json.JSONDecodeError as e:
-        print("Invalid JSON in FIREBASE_ADMIN_SDK:", e)
+    except json.JSONDecodeError:
+        print("Invalid JSON in FIREBASE_ADMIN_SDK.")
     except Exception as e:
-        print("Error initializing Firebase Admin SDK:", e)
-else:
-    print("FIREBASE_ADMIN_SDK environment variable not found.")
+        print(f"Error initializing Firebase: {e}")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
