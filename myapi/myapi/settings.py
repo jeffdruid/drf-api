@@ -12,11 +12,10 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import os
-import json
 from datetime import timedelta
 from dotenv import load_dotenv
 import firebase_admin
-from firebase_admin import credentials, initialize_app
+from firebase_admin import credentials
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -24,23 +23,12 @@ load_dotenv()
 if os.path.exists("env.py"):
     import env
 
-# Firebase JSON credentials from environment variable
-firebase_credentials_json = os.environ.get("FIREBASE_ADMIN_SDK")
-if firebase_credentials_json:
-    try:
-        # Load JSON string from environment variable
-        firebase_credentials_data = json.loads(firebase_credentials_json)
-        cred = credentials.Certificate(firebase_credentials_data)
-        initialize_app(cred)
-    except json.JSONDecodeError:
-        print("Invalid JSON in FIREBASE_ADMIN_SDK.")
-    except Exception as e:
-        print(f"Error initializing Firebase: {e}")
+# Initialize Firebase Admin SDK
+cred = credentials.Certificate(os.environ.get("FIREBASE_ADMIN_SDK"))
+firebase_admin.initialize_app(cred)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-
 
 
 # Quick-start development settings - unsuitable for production
@@ -121,7 +109,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "myapi.wsgi.application"
+WSGI_APPLICATION = "myapi.myapi.wsgi.application"
 
 
 # Database
