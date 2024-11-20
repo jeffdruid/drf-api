@@ -8,10 +8,6 @@ https://docs.djangoproject.com/en/4.2/howto/deployment/wsgi/
 """
 
 import os
-import logging
-
-logging.basicConfig(level=logging.DEBUG)
-logging.debug(f"DJANGO_SETTINGS_MODULE: {os.getenv('DJANGO_SETTINGS_MODULE')}")
 
 from django.core.wsgi import get_wsgi_application
 

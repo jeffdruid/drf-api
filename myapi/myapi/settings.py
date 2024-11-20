@@ -40,7 +40,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", os.environ.get("ALLOWED_HOST")]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
 
 # Application definition
@@ -109,7 +109,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "myapi.myapi.wsgi.application"
+WSGI_APPLICATION = "myapi.wsgi.application"
 
 
 # Database
