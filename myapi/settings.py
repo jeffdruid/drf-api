@@ -16,6 +16,7 @@ from datetime import timedelta
 from dotenv import load_dotenv
 import firebase_admin
 from firebase_admin import credentials
+import json
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -24,7 +25,13 @@ if os.path.exists("env.py"):
     import env
 
 # Initialize Firebase Admin SDK
-cred = credentials.Certificate(os.environ.get("FIREBASE_ADMIN_SDK"))
+firebase_admin_sdk = os.environ.get("FIREBASE_ADMIN_SDK")
+
+if firebase_admin_sdk.startswith("{"):  # This checks if it's JSON (Heroku case)
+    cred = credentials.Certificate(json.loads(firebase_admin_sdk))
+else:  # Assume it's a file path (Local development case)
+    cred = credentials.Certificate(firebase_admin_sdk)
+
 firebase_admin.initialize_app(cred)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
