@@ -1,1 +1,1 @@
-web: gunicorn myapi.myapi.wsgi:application --log-level debug
+web: gunicorn myapi.wsgi:application --log-level debug
